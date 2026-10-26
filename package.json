@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Playwright + TypeScript + Cucumber (BDD) automation for the OrangeHRM demo app using Base Page and Page Object patterns",
   "scripts": {
+    "test": "cucumber-js",
+    "test:smoke": "cucumber-js --tags \"@smoke\"",
+    "test:regression": "cucumber-js --tags \"@regression\"",
     "install:browsers": "playwright install --with-deps",
     "test": "cucumber-js",
     "test:headed": "cross-env HEADLESS=false cucumber-js",
@@ -14,7 +17,13 @@
     "typecheck": "tsc --noEmit",
     "clean": "node -e \"require('fs').rmSync('reports',{recursive:true,force:true})\""
   },
-  "keywords": ["playwright", "cucumber", "typescript", "bdd", "orangehrm"],
+  "keywords": [
+    "playwright",
+    "cucumber",
+    "typescript",
+    "bdd",
+    "orangehrm"
+  ],
   "license": "MIT",
   "devDependencies": {
     "@cucumber/cucumber": "^11.2.0",
