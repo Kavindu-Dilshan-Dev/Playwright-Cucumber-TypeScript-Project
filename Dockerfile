@@ -1,17 +1,22 @@
-# Use a Playwright image with browsers and system dependencies
-FROM mcr.microsoft.com/playwright:v1.64.1-noble
+FROM jenkins/jenkins:lts
 
-WORKDIR /app
+USER root
 
-# Install project dependencies
-COPY package.json package-lock.json ./
-RUN npm ci
+# Install Node.js, npm, Git, and supporting packages
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ca-certificates \
+        curl \
+        git \
+        nodejs \
+        npm && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-# Copy the automation source code
-COPY . .
+# Verify installations
+RUN node --version && \
+    npm --version && \
+    git --version
 
-# Create a directory for test reports
-RUN mkdir -p reports
-
-# Default command; Jenkins can override this
-CMD ["npx", "cucumber-js"]
+# Switch back to the Jenkins user
+USER jenkins
