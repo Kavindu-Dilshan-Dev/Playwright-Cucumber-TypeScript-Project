@@ -1,0 +1,15 @@
+services:
+  tests:
+    build: .
+    image: orangehrm-tests
+    ipc: host
+    environment:
+      BASE_URL: ${BASE_URL:-https://opensource-demo.orangehrmlive.com}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-Admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+      BROWSER: ${BROWSER:-chromium}
+      HEADLESS: "true"
+    # Pass tags via TAGS, e.g.  TAGS=@smoke docker compose up --build
+    command: ["sh", "-c", "npx cucumber-js --tags \"${TAGS:-not @ignore}\""]
+    volumes:
+      - ./reports:/app/reports

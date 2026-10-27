@@ -1,6 +1,15 @@
 node_modules
+<<<<<<< HEAD
 .git
 .env
 reports
 playwright-report
 test-results
+=======
+reports
+dist
+.git
+.env
+Jenkinsfile
+*.md
+>>>>>>> b9b574e0d7387c49b863bbb9737c28d6f036780d
