@@ -62,4 +62,35 @@ npx cucumber-js features/login.feature:12   # single scenario by line
 - The public demo is shared and resets periodically; tests generate unique employee data and
   clean up where they delete. Occasional slowness/flakiness on the demo site is normal –
   tune `DEFAULT_TIMEOUT` / `STEP_TIMEOUT` in `.env`.
-"# Playwright-Cucumber-TypeScript-Project" 
+
+## Docker
+
+```bash
+docker build -t orangehrm-tests .
+
+# run everything, reports written to ./reports
+docker run --rm --ipc=host -v "$(pwd)/reports:/app/reports" orangehrm-tests
+
+# smoke only
+docker run --rm --ipc=host -v "$(pwd)/reports:/app/reports" orangehrm-tests npx cucumber-js --tags @smoke
+
+# or with compose
+TAGS=@smoke docker compose up --build --abort-on-container-exit
+```
+
+> Keep the image tag in `Dockerfile` and `Jenkinsfile` in sync with the `@playwright/test`
+> version in `package-lock.json`, otherwise Playwright can't find its browsers.
+
+## Jenkins
+
+The `Jenkinsfile` is a declarative pipeline that runs inside the official Playwright Docker image.
+
+Requirements: Docker available on the agent, plus the **Docker Pipeline** and **HTML Publisher** plugins.
+
+1. Create a *Pipeline* (or Multibranch Pipeline) job pointing at this repo.
+2. Use "Pipeline script from SCM" with path `Jenkinsfile`.
+3. Run *Build with Parameters* – choose `BROWSER`, `TAGS` (default `@smoke`), `PARALLEL`, `BASE_URL`.
+4. The Cucumber HTML report is published on the build page and `reports/**` (screenshots, traces, JSON) is archived.
+
+For real credentials, replace the `ADMIN_USERNAME` / `ADMIN_PASSWORD` environment entries with
+`credentials('...')` bindings.

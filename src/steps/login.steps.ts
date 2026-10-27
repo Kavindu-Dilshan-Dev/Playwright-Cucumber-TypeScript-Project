@@ -35,5 +35,3 @@ Then('I should be back on the login page', async function (this: CustomWorld) {
   await this.loginPage.expectUrlToContain('/auth/login');
   expect(await this.loginPage.isLoginFormDisplayed()).toBe(true);
 });
-
-
