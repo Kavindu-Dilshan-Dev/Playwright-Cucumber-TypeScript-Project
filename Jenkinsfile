@@ -27,6 +27,7 @@ pipeline {
     environment {
         CI = 'true'
         NODE_ENV = 'test'
+        TEST_IMAGE = 'playwright-cucumber-tests:v1'
     }
 
     stages {
@@ -34,58 +35,51 @@ pipeline {
         stage('Checkout') {
             steps {
                 checkout scm
-
                 echo 'Source code checked out successfully.'
             }
         }
 
-        stage('Check Node.js and npm') {
+        stage('Check Docker') {
             steps {
                 sh '''
-                    node --version
-                    npm --version
+                    docker --version
+                    docker info
                 '''
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Build Playwright Test Image') {
             steps {
                 sh '''
-                    npm ci
-                '''
-            }
-        }
-
-        stage('Install Playwright Browsers') {
-            steps {
-                sh '''
-                    npx playwright install chromium
+                    docker build -t "$TEST_IMAGE" .
                 '''
             }
         }
 
         stage('Execute Tests') {
             steps {
+                sh '''
+                    mkdir -p reports
+                '''
+
                 script {
+                    def tagArgument = ''
+
                     if (params.TEST_SUITE == 'smoke') {
-                        sh '''
-                            npx cucumber-js \
-                              --tags "@smoke" \
-                              --format progress \
-                              --format json:reports/cucumber-report.json
-                        '''
+                        tagArgument = '--tags "@smoke"'
                     } else if (params.TEST_SUITE == 'regression') {
+                        tagArgument = '--tags "@regression"'
+                    }
+
+                    withEnv(["CUCUMBER_TAG_ARGUMENT=${tagArgument}"]) {
                         sh '''
-                            npx cucumber-js \
-                              --tags "@regression" \
-                              --format progress \
-                              --format json:reports/cucumber-report.json
-                        '''
-                    } else {
-                        sh '''
-                            npx cucumber-js \
-                              --format progress \
-                              --format json:reports/cucumber-report.json
+                            docker run --rm \
+                              -e CI=true \
+                              -e NODE_ENV=test \
+                              -e HEADLESS="${HEADLESS}" \
+                              -v "$WORKSPACE/reports:/app/reports" \
+                              "$TEST_IMAGE" \
+                              sh -c 'npx cucumber-js ${CUCUMBER_TAG_ARGUMENT} --format progress --format json:reports/cucumber-report.json'
                         '''
                     }
                 }
@@ -95,12 +89,10 @@ pipeline {
 
     post {
         always {
-            script {
-                archiveArtifacts(
-                    artifacts: 'reports/**/*',
-                    allowEmptyArchive: true
-                )
-            }
+            archiveArtifacts(
+                artifacts: 'reports/**/*',
+                allowEmptyArchive: true
+            )
 
             echo 'Test execution completed. Check the build console and archived reports.'
         }

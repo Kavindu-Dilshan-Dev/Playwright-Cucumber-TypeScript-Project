@@ -1,22 +1,13 @@
-FROM jenkins/jenkins:lts
+FROM mcr.microsoft.com/playwright:v1.64.1-noble
 
-USER root
+WORKDIR /app
 
-# Install Node.js, npm, Git, and supporting packages
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        ca-certificates \
-        curl \
-        git \
-        nodejs \
-        npm && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+COPY package.json package-lock.json ./
 
-# Verify installations
-RUN node --version && \
-    npm --version && \
-    git --version
+RUN npm ci
 
-# Switch back to the Jenkins user
-USER jenkins
+COPY . .
+
+RUN mkdir -p reports
+
+CMD ["npx", "cucumber-js"]
